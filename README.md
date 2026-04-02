@@ -86,3 +86,24 @@ conflict  ⟺  start_A < end_B  AND  start_B < end_A
 Every pair of timed tasks is compared.  The method returns a list of
 human-readable warning strings — one per conflict — and never raises an
 exception.  Tasks without a `start_time` are silently skipped.
+
+## Testing PawPal+
+
+Run the full test suite from the project root:
+
+```bash
+python3 -m pytest tests/test_pawpal.py -v
+```
+
+### What the tests cover
+
+| Group | Tests | What is verified |
+|---|---|---|
+| **Sorting** | `test_sort_by_time_*`, `test_rank_tasks_priority_order` | Tasks added out of order come back in correct chronological / priority order; untimed tasks sort last |
+| **Recurrence** | `test_daily_task_*`, `test_weekly_task_*` | Daily tasks are always due; weekly tasks respect the 7-day cooldown boundary; not-due tasks are excluded from the plan |
+| **Conflict detection** | `test_conflict_detected_*`, `test_no_conflict_*` | Overlapping windows are flagged; back-to-back (adjacent) tasks are not; tasks with no `start_time` never trigger false positives |
+| **Edge cases** | `test_pet_with_no_tasks_*`, `test_all_tasks_exceed_budget_*`, etc. | Empty pets/owners, full budget exhaustion, pre-completed tasks, and unmatched filter names all behave gracefully |
+
+**Confidence level: ★★★★☆**
+Core scheduling logic (priority ordering, recurrence gating, conflict detection) is fully covered.
+One star withheld because the Streamlit UI layer (`app.py`) has no automated tests — those paths rely on manual verification.

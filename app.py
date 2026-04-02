@@ -2,6 +2,20 @@ import uuid
 import streamlit as st
 from pawpal_system import Owner, Pet, Scheduler, Task
 
+
+def _md_table(rows: list[dict]) -> None:
+    """Render a list of dicts as a markdown table — no pandas required."""
+    if not rows:
+        return
+    headers = list(rows[0].keys())
+    header_row = "| " + " | ".join(headers) + " |"
+    sep_row = "| " + " | ".join("---" for _ in headers) + " |"
+    data_rows = [
+        "| " + " | ".join(str(row.get(h, "")) for h in headers) + " |"
+        for row in rows
+    ]
+    st.markdown("\n".join([header_row, sep_row] + data_rows))
+
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 st.title("🐾 PawPal+")
 st.caption("Smart pet care scheduling — priority-aware, conflict-free, and time-budgeted.")
@@ -115,7 +129,7 @@ else:
                 "Preferred Slot": task.preferred_time,
                 "Status": "✅ done" if task.is_completed else "⏳ pending",
             })
-        st.table(rows)
+        _md_table(rows)
     else:
         st.info("No tasks yet. Add one above.")
 
@@ -171,7 +185,7 @@ else:
                 "Priority": task.priority,
                 "Status": "✅ done" if task.is_completed else "⏳ pending",
             })
-        st.table(rows)
+        _md_table(rows)
     else:
         st.info("No tasks match the selected filters.")
 

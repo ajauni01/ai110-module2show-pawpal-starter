@@ -41,3 +41,48 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Smarter Scheduling
+
+The `Scheduler` class (in `pawpal_system.py`) goes beyond a simple priority queue.
+Four algorithmic improvements make the daily plan more useful:
+
+### 1. Time-of-day sorting — `sort_by_time()`
+Tasks can be assigned a `start_time` in `"HH:MM"` format.
+`sort_by_time()` uses a lambda sort key on the raw string:
+
+```python
+key=lambda x: (x[1].start_time == "", x[1].start_time)
+```
+
+Zero-padded 24-hour strings sort lexicographically in the correct order, so
+no datetime parsing is needed.  Tasks without a `start_time` are pushed to
+the end of the list.
+
+### 2. Flexible filtering — `filter_tasks(pet_name, completed)`
+`filter_tasks()` accepts two independent, optional parameters:
+
+| Call | Returns |
+|---|---|
+| `filter_tasks(pet_name="Mochi")` | All of Mochi's tasks |
+| `filter_tasks(completed=False)` | Every pending task across all pets |
+| `filter_tasks(pet_name="Luna", completed=True)` | Only Luna's completed tasks |
+
+Both filters are applied with AND logic when combined.
+
+### 3. Recurring-task awareness — `Task.is_due_today()`
+The `frequency` field is now enforced by the scheduler.
+- `"daily"` and `"as_needed"` tasks are always eligible.
+- `"weekly"` tasks are skipped if `last_completed_date` is within the last
+  7 days, preventing redundant work from appearing in the daily plan.
+
+### 4. Conflict detection — `detect_conflicts()`
+Uses the standard interval-overlap condition to find scheduling collisions:
+
+```
+conflict  ⟺  start_A < end_B  AND  start_B < end_A
+```
+
+Every pair of timed tasks is compared.  The method returns a list of
+human-readable warning strings — one per conflict — and never raises an
+exception.  Tasks without a `start_time` are silently skipped.
